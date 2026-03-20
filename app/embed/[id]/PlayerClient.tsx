@@ -1,7 +1,8 @@
+/* eslint-disable @next/next/no-img-element */
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { FaPause, FaPlay, FaDownload, FaVolumeUp } from "react-icons/fa";
+import { FaDownload } from "react-icons/fa";
 
 function fmt(t: number) {
   if (!isFinite(t) || t < 0) return "0:00";
@@ -15,20 +16,24 @@ export default function PlayerClient({
   downloadUrl,
   title,
   artist,
+  thumb,
 }: {
   src: string;
   downloadUrl: string;
   title: string;
   artist: string;
+  thumb?: string;
 }) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const progRef = useRef<HTMLDivElement | null>(null);
+  const trackRef = useRef<HTMLDivElement | null>(null);
+  const volRef = useRef<HTMLDivElement | null>(null);
 
   const [isPlaying, setIsPlaying] = useState(false);
   const [cur, setCur] = useState("0:00");
   const [dur, setDur] = useState("0:00");
   const [pct, setPct] = useState(0);
-  const [vol, setVol] = useState(1);
+  const [vol, setVol] = useState(0.8);
+  const [muted, setMuted] = useState(false);
 
   const safeTitle = useMemo(() => title || "Untitled", [title]);
   const safeArtist = useMemo(() => artist || "", [artist]);
@@ -40,8 +45,7 @@ export default function PlayerClient({
     const onLoaded = () => setDur(fmt(a.duration));
     const onTime = () => {
       setCur(fmt(a.currentTime));
-      const p = (a.currentTime / a.duration) * 100 || 0;
-      setPct(p);
+      setPct((a.currentTime / a.duration) * 100 || 0);
     };
     const onPlay = () => setIsPlaying(true);
     const onPause = () => setIsPlaying(false);
@@ -61,8 +65,8 @@ export default function PlayerClient({
 
   useEffect(() => {
     const a = audioRef.current;
-    if (a) a.volume = vol;
-  }, [vol]);
+    if (a) a.volume = muted ? 0 : vol;
+  }, [vol, muted]);
 
   const togglePlay = async () => {
     const a = audioRef.current;
@@ -70,107 +74,405 @@ export default function PlayerClient({
     try {
       if (a.paused) await a.play();
       else a.pause();
-    } catch {
-      // autoplay restrictions etc.
-    }
+    } catch {}
   };
 
   const seek = (e: React.MouseEvent<HTMLDivElement>) => {
     const a = audioRef.current;
-    const bar = progRef.current;
+    const bar = trackRef.current;
     if (!a || !bar || !isFinite(a.duration)) return;
-
     const r = bar.getBoundingClientRect();
-    const x = Math.min(Math.max(0, e.clientX - r.left), r.width);
-    a.currentTime = (x / r.width) * a.duration;
+    a.currentTime =
+      (Math.min(Math.max(0, e.clientX - r.left), r.width) / r.width) *
+      a.duration;
   };
 
+  const seekVol = (e: React.MouseEvent<HTMLDivElement>) => {
+    const bar = volRef.current;
+    if (!bar) return;
+    const r = bar.getBoundingClientRect();
+    const v = Math.min(Math.max(0, e.clientX - r.left), r.width) / r.width;
+    setVol(v);
+    setMuted(false);
+  };
+
+  const toggleMute = () => setMuted((m) => !m);
+
+  const volPct = (muted ? 0 : vol) * 100;
+
   return (
-    <div className="w-full max-w-225 border border-white/10 bg-black px-5 py-4 text-white shadow-[0_10px_30px_rgba(0,0,0,0.6)]">
-      <div className="flex items-center gap-4">
-        <audio ref={audioRef} src={src} preload="metadata" />
+    <div
+      style={{
+        width: "100%",
+        background: "#111",
+        fontFamily: "sans-serif",
+        boxSizing: "border-box",
+        borderTop: "1px solid #222",
+      }}
+    >
+      <audio ref={audioRef} src={src} preload="metadata" />
 
-        {/* Play/Pause */}
-        <button
-          type="button"
-          onClick={togglePlay}
-          aria-label="Play/Pause"
-          className="grid h-12 w-12 place-items-center rounded-full border border-white/20 bg-white text-black transition hover:scale-105 active:scale-95"
+      {/* Mobile progress bar — top border style */}
+      <div
+        onClick={seek}
+        style={{
+          height: "3px",
+          background: "#2a2a2a",
+          cursor: "pointer",
+          display: "block",
+        }}
+        className="sm:hidden"
+      >
+        <div
+          style={{
+            height: "100%",
+            width: `${pct}%`,
+            background: "#fff",
+            pointerEvents: "none",
+          }}
+        />
+      </div>
+
+      {/* Main row */}
+      <div
+        style={{
+          display: "flex",
+          alignItems: "stretch",
+          height: "72px",
+        }}
+      >
+        {/* Controls — left */}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "14px",
+            padding: "0 20px",
+            borderRight: "1px solid #222",
+            flexShrink: 0,
+          }}
         >
-          {isPlaying ? (
-            <FaPause className="text-[18px]" />
+          {/* Prev */}
+          <button
+            onClick={() => {
+              const a = audioRef.current;
+              if (a) {
+                a.currentTime = 0;
+              }
+            }}
+            aria-label="Restart"
+            style={{
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+              padding: 0,
+              opacity: 0.5,
+              display: "flex",
+              alignItems: "center",
+            }}
+          >
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="#fff">
+              <polygon points="14,2 4,8 14,14" />
+              <rect x="2" y="2" width="2" height="12" fill="#fff" />
+            </svg>
+          </button>
+
+          {/* Play/Pause */}
+          <button
+            onClick={togglePlay}
+            aria-label="Play/Pause"
+            style={{
+              width: "40px",
+              height: "40px",
+              borderRadius: "50%",
+              background: "#fff",
+              border: "none",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              flexShrink: 0,
+            }}
+          >
+            {isPlaying ? (
+              <svg width="13" height="13" viewBox="0 0 13 13" fill="#111">
+                <rect x="0" y="0" width="4" height="13" />
+                <rect x="8" y="0" width="4" height="13" />
+              </svg>
+            ) : (
+              <svg width="13" height="15" viewBox="0 0 13 15" fill="#111">
+                <polygon points="0,0 13,7.5 0,15" />
+              </svg>
+            )}
+          </button>
+
+          {/* Next / Download on mobile */}
+          <a
+            href={`/api/download?src=${encodeURIComponent(downloadUrl)}&title=${encodeURIComponent(safeTitle)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Download"
+            style={{
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+              padding: 0,
+              opacity: 0.5,
+              display: "flex",
+              alignItems: "center",
+              color: "#fff",
+            }}
+          >
+            <FaDownload size={14} />
+          </a>
+        </div>
+
+        {/* Middle — image + meta */}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "stretch",
+            flex: 1,
+            minWidth: 0,
+            borderRight: "1px solid #222",
+          }}
+        >
+          {/* Thumbnail */}
+          {thumb ? (
+            <img
+              src={thumb}
+              alt={safeTitle}
+              style={{
+                width: "72px",
+                height: "100%",
+                objectFit: "cover",
+                flexShrink: 0,
+                display: "block",
+                background: "#222",
+              }}
+            />
           ) : (
-            <FaPlay className="ml-0.5 text-[18px]" />
+            <div
+              style={{
+                width: "72px",
+                height: "100%",
+                flexShrink: 0,
+                background: "#222",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="#444">
+                <path d="M12 3a9 9 0 100 18A9 9 0 0012 3zm0 2a7 7 0 110 14A7 7 0 0112 5zm0 3a4 4 0 100 8 4 4 0 000-8zm0 2a2 2 0 110 4 2 2 0 010-4z" />
+              </svg>
+            </div>
           )}
-        </button>
 
-        {/* Meta + Progress */}
-        <div className="min-w-0 flex-1">
-          <div className="mb-2 flex flex-col">
+          {/* Meta */}
+          <div
+            style={{
+              flex: 1,
+              minWidth: 0,
+              display: "flex",
+              flexDirection: "column",
+              padding: "0 16px",
+            }}
+          >
+            {/* Top row — title, artist, time */}
             <div
-              className="truncate text-[16px] font-semibold leading-tight text-white"
-              title={safeTitle}
-            >
-              {safeTitle}
-            </div>
-            <div
-              className="truncate text-[13px] text-white/60"
-              title={safeArtist}
-            >
-              {safeArtist}
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <span className="w-10 text-center text-[12px] text-white/50">
-              {cur}
-            </span>
-
-            <div
-              ref={progRef}
-              onClick={seek}
-              aria-label="Seek"
-              className="group relative h-2 flex-1 cursor-pointer rounded-full bg-white/20"
+              style={{
+                flex: 1,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: "12px",
+                minWidth: 0,
+                borderBottom: "1px solid #1a1a1a",
+              }}
             >
               <div
-                className="absolute left-0 top-0 h-full rounded-full bg-white"
-                style={{ width: `${pct}%` }}
-              />
-              <div
-                className="absolute top-1/2 h-3.5 w-3.5 -translate-y-1/2 rounded-full bg-white shadow-lg opacity-0 transition-opacity group-hover:opacity-100"
-                style={{ left: `${pct}%`, transform: "translate(-50%, -50%)" }}
-              />
+                style={{
+                  display: "flex",
+                  alignItems: "baseline",
+                  gap: "8px",
+                  minWidth: 0,
+                  flex: 1,
+                  overflow: "hidden",
+                }}
+              >
+                <span
+                  style={{
+                    color: "#fff",
+                    fontSize: "13px",
+                    fontWeight: 600,
+                    margin: 0,
+                    whiteSpace: "nowrap",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    flexShrink: 1,
+                    minWidth: 0,
+                  }}
+                >
+                  {safeTitle}
+                </span>
+                <span
+                  style={{
+                    color: "#888",
+                    fontSize: "11px",
+                    margin: 0,
+                    whiteSpace: "nowrap",
+                    flexShrink: 0,
+                  }}
+                >
+                  {safeArtist}
+                </span>
+              </div>
+              <span
+                style={{
+                  color: "#aaa",
+                  fontSize: "12px",
+                  flexShrink: 0,
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {cur} / {dur}
+              </span>
             </div>
 
-            <span className="w-10 text-center text-[12px] text-white/50">
-              {dur}
-            </span>
+            {/* Bottom row — progress bar */}
+            <div
+              style={{
+                flex: 1,
+                display: "flex",
+                alignItems: "center",
+              }}
+              className="hidden sm:flex"
+            >
+              <div
+                ref={trackRef}
+                onClick={seek}
+                style={{
+                  height: "3px",
+                  background: "#2a2a2a",
+                  borderRadius: "2px",
+                  cursor: "pointer",
+                  width: "100%",
+                  position: "relative",
+                }}
+              >
+                <div
+                  style={{
+                    height: "100%",
+                    background: "#fff",
+                    borderRadius: "2px",
+                    width: `${pct}%`,
+                    pointerEvents: "none",
+                  }}
+                />
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* Volume */}
-        <div className="hidden items-center gap-2 sm:flex">
-          <FaVolumeUp className="text-[14px] text-white/60" />
-          <input
-            type="range"
-            min="0"
-            max="1"
-            step="0.01"
-            value={vol}
-            onChange={(e) => setVol(parseFloat(e.target.value))}
-            aria-label="Volume"
-            className="w-24 accent-white"
-          />
+        {/* Volume — desktop only */}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "10px",
+            padding: "0 18px",
+            flexShrink: 0,
+          }}
+          className="hidden sm:flex"
+        >
+          <div
+            onClick={toggleMute}
+            style={{ cursor: "pointer", opacity: 0.7, flexShrink: 0 }}
+          >
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <path d="M2 5.5H4.5L7.5 3V13L4.5 10.5H2V5.5Z" fill="#888" />
+              {!muted && (
+                <>
+                  <path
+                    d="M10 6C10.9 6.9 11.4 7.4 11.4 8C11.4 8.6 10.9 9.1 10 10"
+                    stroke="#888"
+                    strokeWidth="1.2"
+                    strokeLinecap="round"
+                  />
+                  <path
+                    d="M12 4C13.7 5.5 14.5 6.7 14.5 8C14.5 9.3 13.7 10.5 12 12"
+                    stroke="#888"
+                    strokeWidth="1.2"
+                    strokeLinecap="round"
+                  />
+                </>
+              )}
+              {muted && (
+                <path
+                  d="M10 6L14 10M14 6L10 10"
+                  stroke="#888"
+                  strokeWidth="1.2"
+                  strokeLinecap="round"
+                />
+              )}
+            </svg>
+          </div>
+          <div
+            ref={volRef}
+            onClick={seekVol}
+            style={{
+              width: "72px",
+              height: "3px",
+              background: "#2a2a2a",
+              borderRadius: "2px",
+              position: "relative",
+              cursor: "pointer",
+            }}
+          >
+            <div
+              style={{
+                height: "100%",
+                background: "#888",
+                borderRadius: "2px",
+                width: `${volPct}%`,
+                pointerEvents: "none",
+              }}
+            />
+            <div
+              style={{
+                position: "absolute",
+                top: "50%",
+                left: `${volPct}%`,
+                transform: "translate(-50%, -50%)",
+                width: "11px",
+                height: "11px",
+                background: "#fff",
+                borderRadius: "50%",
+                pointerEvents: "none",
+              }}
+            />
+          </div>
         </div>
 
-        {/* Download */}
+        {/* Download — desktop */}
         <a
-          href={downloadUrl}
+          href={`/api/download?src=${encodeURIComponent(downloadUrl)}&title=${encodeURIComponent(safeTitle)}`}
           target="_blank"
           rel="noopener noreferrer"
-          className="grid h-12 w-12 place-items-center rounded-full border border-white/20 bg-white text-black transition hover:scale-105 active:scale-95"
+          aria-label="Download"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "0 16px",
+            color: "#444",
+            flexShrink: 0,
+            textDecoration: "none",
+          }}
+          className="hidden sm:flex"
         >
-          <FaDownload className="text-[16px]" />
+          <FaDownload size={14} />
         </a>
       </div>
     </div>

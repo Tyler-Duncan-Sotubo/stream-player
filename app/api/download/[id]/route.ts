@@ -1,20 +1,17 @@
 import { NextRequest } from "next/server";
 
-export async function GET(
-  req: NextRequest,
-  ctx: { params: Promise<{ id: string }> },
-) {
-  const { id } = await ctx.params;
-
+export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
-  const rawTitle = searchParams.get("title") || id;
+  const src = searchParams.get("src") || "";
+  const rawTitle = searchParams.get("title") || "track";
 
-  // Clean filename (remove weird characters)
+  if (!src) {
+    return new Response("Missing src", { status: 400 });
+  }
+
   const safeTitle = rawTitle.replace(/[^a-z0-9_\- ]/gi, "").trim();
 
-  const upstream = await fetch(
-    `https://pixeldrain.com/api/file/${encodeURIComponent(id)}`,
-  );
+  const upstream = await fetch(src);
 
   if (!upstream.ok) {
     return new Response("File not found", { status: 404 });

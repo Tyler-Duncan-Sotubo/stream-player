@@ -1,18 +1,29 @@
 import PlayerClient from "./PlayerClient";
 
 type Props = {
-  params: Promise<{ id: string }>;
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
 };
 
-export default async function EmbedPage({ params, searchParams }: Props) {
-  const { id } = await params;
+export default async function EmbedPage({ searchParams }: Props) {
   const sp = (await searchParams) || {};
 
   const title = typeof sp.title === "string" ? sp.title : "Untitled";
   const artist = typeof sp.artist === "string" ? sp.artist : "";
-  const dl = `/api/download/${encodeURIComponent(id)}?title=${encodeURIComponent(title)}`;
-  const src = `https://pixeldrain.com/api/file/${encodeURIComponent(id)}`;
+  const src = typeof sp.src === "string" ? sp.src : "";
+
+  if (!src) {
+    return (
+      <html>
+        <body style={{ margin: 0, background: "transparent" }}>
+          <p
+            style={{ color: "red", fontFamily: "sans-serif", padding: "1rem" }}
+          >
+            Missing src parameter.
+          </p>
+        </body>
+      </html>
+    );
+  }
 
   return (
     <html>
@@ -24,7 +35,7 @@ export default async function EmbedPage({ params, searchParams }: Props) {
       <body>
         <PlayerClient
           src={src}
-          downloadUrl={dl}
+          downloadUrl={src}
           title={title}
           artist={artist}
         />
