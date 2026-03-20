@@ -115,6 +115,20 @@ export default function PlayerClient({
     }
   };
 
+  // Add this handler inside the component, before the return:
+  const handleDownload = (e: React.MouseEvent) => {
+    e.preventDefault();
+    // 1. Trigger the proxied download
+    const dlLink = document.createElement("a");
+    dlLink.href = `/api/download?src=${encodeURIComponent(downloadUrl)}&title=${encodeURIComponent(safeTitle)}`;
+    dlLink.setAttribute("download", "");
+    document.body.appendChild(dlLink);
+    dlLink.click();
+    document.body.removeChild(dlLink);
+    // 2. Open the ad in a new tab
+    window.open("https://omg10.com/4/7803371", "_blank", "noopener,noreferrer");
+  };
+
   return (
     <div
       style={{
@@ -232,10 +246,8 @@ export default function PlayerClient({
                 {safeArtist}
               </p>
             </div>
-            <a
-              href={`/api/download?src=${encodeURIComponent(downloadUrl)}&title=${encodeURIComponent(safeTitle)}`}
-              target="_blank"
-              rel="noopener noreferrer"
+            <button
+              onClick={handleDownload}
               style={{
                 display: "flex",
                 alignItems: "center",
@@ -243,9 +255,9 @@ export default function PlayerClient({
                 background: "#2a2a2a",
                 borderRadius: "20px",
                 padding: "6px 12px",
-                textDecoration: "none",
-                flexShrink: 0,
                 border: "1px solid #333",
+                cursor: "pointer",
+                flexShrink: 0,
               }}
             >
               <FaDownload size={11} color="#888" />
@@ -254,7 +266,7 @@ export default function PlayerClient({
               >
                 Download
               </span>
-            </a>
+            </button>
           </div>
 
           {/* Progress */}
