@@ -3,6 +3,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { FaDownload } from "react-icons/fa";
+import { IoMdDownload } from "react-icons/io";
 
 function fmt(t: number) {
   if (!isFinite(t) || t < 0) return "0:00";
@@ -252,15 +253,15 @@ export default function PlayerClient({
                 display: "flex",
                 alignItems: "center",
                 gap: "6px",
-                background: "#2a2a2a",
                 borderRadius: "20px",
-                padding: "6px 12px",
-                border: "1px solid #333",
                 cursor: "pointer",
                 flexShrink: 0,
               }}
             >
-              <FaDownload size={14} color="#888" />
+              <IoMdDownload
+                size={35}
+                className=" hover:text-white text-gray-500"
+              />
             </button>
           </div>
 
