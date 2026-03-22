@@ -260,12 +260,7 @@ export default function PlayerClient({
                 flexShrink: 0,
               }}
             >
-              <FaDownload size={11} color="#888" />
-              <span
-                style={{ fontSize: "11px", color: "#888", fontWeight: 500 }}
-              >
-                Download
-              </span>
+              <FaDownload size={14} color="#888" />
             </button>
           </div>
 
