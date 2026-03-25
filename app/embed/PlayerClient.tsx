@@ -118,20 +118,14 @@ export default function PlayerClient({
   // Add this handler inside the component, before the return:
   const handleDownload = (e: React.MouseEvent) => {
     e.preventDefault();
-    // Force download via fetch + blob (client-side, zero server memory)
-    fetch(downloadUrl)
-      .then((res) => res.blob())
-      .then((blob) => {
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = `${safeTitle}.mp3`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-      });
-    // Open ad in new tab
+    // 1. Trigger the proxied download
+    const dlLink = document.createElement("a");
+    dlLink.href = `/api/download?src=${encodeURIComponent(downloadUrl)}&title=${encodeURIComponent(safeTitle)}`;
+    dlLink.setAttribute("download", "");
+    document.body.appendChild(dlLink);
+    dlLink.click();
+    document.body.removeChild(dlLink);
+    // 2. Open the ad in a new tab
     window.open("https://omg10.com/4/7803371", "_blank", "noopener,noreferrer");
   };
 
