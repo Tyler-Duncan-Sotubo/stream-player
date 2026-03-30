@@ -17,12 +17,14 @@ export default function PlayerClient({
   title,
   artist,
   thumb,
+  showDownload = true,
 }: {
   src: string;
   downloadUrl: string;
   title: string;
   artist: string;
   thumb?: string;
+  showDownload?: boolean;
 }) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const trackRef = useRef<HTMLDivElement | null>(null);
@@ -246,22 +248,24 @@ export default function PlayerClient({
                 {safeArtist}
               </p>
             </div>
-            <button
-              onClick={handleDownload}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "6px",
-                borderRadius: "20px",
-                cursor: "pointer",
-                flexShrink: 0,
-              }}
-            >
-              <IoMdDownload
-                size={35}
-                className=" hover:text-white text-gray-500"
-              />
-            </button>
+            {showDownload && (
+              <button
+                onClick={handleDownload}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  borderRadius: "20px",
+                  cursor: "pointer",
+                  flexShrink: 0,
+                }}
+              >
+                <IoMdDownload
+                  size={35}
+                  className="hover:text-white text-gray-500"
+                />
+              </button>
+            )}
           </div>
 
           {/* Progress */}

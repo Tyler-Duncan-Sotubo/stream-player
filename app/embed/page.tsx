@@ -11,6 +11,8 @@ export default async function EmbedPage({ searchParams }: Props) {
   const artist = typeof sp.artist === "string" ? sp.artist : "";
   const src = typeof sp.src === "string" ? sp.src : "";
   const thumb = typeof sp.thumb === "string" ? sp.thumb : "";
+  const showDownload =
+    typeof sp.download === "string" ? sp.download !== "false" : true;
 
   if (!src) {
     return (
@@ -40,6 +42,7 @@ export default async function EmbedPage({ searchParams }: Props) {
           title={title}
           artist={artist}
           thumb={thumb}
+          showDownload={showDownload}
         />
       </body>
     </html>
