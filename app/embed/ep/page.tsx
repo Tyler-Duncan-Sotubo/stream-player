@@ -15,6 +15,7 @@ export default async function EPEmbedPage({ searchParams }: Props) {
   const epArtist = getStr(sp.epArtist);
   const epThumb = getStr(sp.epThumb) || undefined;
   const showDownload = getStr(sp.download) !== "false";
+  const showAd = typeof sp.ad === "string" ? sp.ad !== "false" : true;
 
   const tracks: {
     src: string;
@@ -63,6 +64,7 @@ export default async function EPEmbedPage({ searchParams }: Props) {
           epThumb={epThumb}
           tracks={tracks}
           showDownload={showDownload}
+          showAd={showAd} // 👈 new
         />
       </body>
     </html>

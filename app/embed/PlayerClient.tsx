@@ -18,6 +18,7 @@ export default function PlayerClient({
   artist,
   thumb,
   showDownload = true,
+  showAd = false, // 👈 new prop
 }: {
   src: string;
   downloadUrl: string;
@@ -25,6 +26,7 @@ export default function PlayerClient({
   artist: string;
   thumb?: string;
   showDownload?: boolean;
+  showAd?: boolean; // 👈 new prop
 }) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const trackRef = useRef<HTMLDivElement | null>(null);
@@ -120,15 +122,20 @@ export default function PlayerClient({
   // Add this handler inside the component, before the return:
   const handleDownload = (e: React.MouseEvent) => {
     e.preventDefault();
-    // 1. Trigger the proxied download
     const dlLink = document.createElement("a");
     dlLink.href = `/api/download?src=${encodeURIComponent(downloadUrl)}&title=${encodeURIComponent(safeTitle)}`;
     dlLink.setAttribute("download", "");
     document.body.appendChild(dlLink);
     dlLink.click();
     document.body.removeChild(dlLink);
-    // 2. Open the ad in a new tab
-    window.open("https://omg10.com/4/7803371", "_blank", "noopener,noreferrer");
+    if (showAd) {
+      // 👈 conditional
+      window.open(
+        "https://omg10.com/4/7803371",
+        "_blank",
+        "noopener,noreferrer",
+      );
+    }
   };
 
   return (

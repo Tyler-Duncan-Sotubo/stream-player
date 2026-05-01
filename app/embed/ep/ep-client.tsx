@@ -24,12 +24,14 @@ export default function EPClient({
   epThumb,
   tracks,
   showDownload = true,
+  showAd = false, // 👈 new prop
 }: {
   epTitle: string;
   epArtist?: string;
   epThumb?: string;
   tracks: Track[];
   showDownload?: boolean;
+  showAd?: boolean; // 👈 new prop
 }) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const trackRef = useRef<HTMLDivElement | null>(null);
@@ -133,7 +135,14 @@ export default function EPClient({
     document.body.appendChild(dlLink);
     dlLink.click();
     document.body.removeChild(dlLink);
-    window.open("https://omg10.com/4/7803371", "_blank", "noopener,noreferrer");
+    if (showAd) {
+      // 👈 conditional
+      window.open(
+        "https://omg10.com/4/7803371",
+        "_blank",
+        "noopener,noreferrer",
+      );
+    }
   };
 
   return (
