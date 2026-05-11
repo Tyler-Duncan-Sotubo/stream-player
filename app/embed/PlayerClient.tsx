@@ -255,24 +255,6 @@ export default function PlayerClient({
                 {safeArtist}
               </p>
             </div>
-            {showDownload && (
-              <button
-                onClick={handleDownload}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "6px",
-                  borderRadius: "20px",
-                  cursor: "pointer",
-                  flexShrink: 0,
-                }}
-              >
-                <IoMdDownload
-                  size={35}
-                  className="hover:text-white text-gray-500"
-                />
-              </button>
-            )}
           </div>
 
           {/* Progress */}

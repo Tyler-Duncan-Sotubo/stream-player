@@ -570,7 +570,7 @@ export default function EPClient({
               </div>
 
               {/* Download */}
-              {showDownload && (
+              {/* {showDownload && (
                 <button
                   onClick={(e) => handleDownload(e, track)}
                   style={{
@@ -587,7 +587,7 @@ export default function EPClient({
                     style={{ display: "block" }}
                   />
                 </button>
-              )}
+              )} */}
             </div>
           );
         })}
